@@ -1,0 +1,905 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Diagnóstico interativo de visitas para o Gerente Empresas da Região Salvador Norte, com plano de ação e exportação em PDF.">
+<title>Diagnóstico de Visitas Salvador Norte</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=IBM+Plex+Mono:wght@500&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: uma coluna. O caminho da visita (antes, durante, depois) é o fio condutor, com pontos de parada. */
+:root{
+  --bg:#F3F6F9;--surface:#FFFFFF;--surface-2:#E8EEF4;--line:#D2DBE5;
+  --fg:#0F2233;--muted:#516375;
+  --accent:#1263C4;--accent-bg:#E1ECFA;--accent-ink:#FFFFFF;
+  --good:#157347;--good-bg:#DFF2E7;--warn:#8F5B00;--warn-bg:#FAEDCF;--crit:#B02E1C;--crit-bg:#FADFDA;
+  --f-display:"Bricolage Grotesque","Avenir Next","Segoe UI",system-ui,sans-serif;
+  --f-body:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0C1620;--surface:#131F2C;--surface-2:#1B2A3A;--line:#2A3B4E;
+    --fg:#E6EDF4;--muted:#9AABBC;
+    --accent:#5AA2F5;--accent-bg:#15304F;--accent-ink:#08121C;
+    --good:#4FC58A;--good-bg:#12301F;--warn:#E2B04A;--warn-bg:#3A2D10;--crit:#F08272;--crit-bg:#3C1A16;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0C1620;--surface:#131F2C;--surface-2:#1B2A3A;--line:#2A3B4E;
+  --fg:#E6EDF4;--muted:#9AABBC;
+  --accent:#5AA2F5;--accent-bg:#15304F;--accent-ink:#08121C;
+  --good:#4FC58A;--good-bg:#12301F;--warn:#E2B04A;--warn-bg:#3A2D10;--crit:#F08272;--crit-bg:#3C1A16;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:400 1rem/1.55 var(--f-body);
+  padding-block:20px 56px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));}
+.wrap{max-width:760px;margin:0 auto}
+h1,h2,h3,p,ul,ol,figure{margin:0}
+h1,h2,h3{font-family:var(--f-display);font-weight:700;letter-spacing:-.01em;line-height:1.12;text-wrap:balance}
+ul,ol{padding:0;list-style:none}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.eyebrow{font:500 .75rem/1.3 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:28px;color:var(--muted)}
+.top svg{flex:none;color:var(--accent)}
+.stack{display:flex;flex-direction:column;gap:16px}
+.sec{display:flex;flex-direction:column;gap:14px;margin-top:40px}
+.sec h2{font-size:1.5rem}
+.sec>.eyebrow{margin-bottom:-6px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px}
+
+.btn{font:600 1rem var(--f-body);min-height:48px;padding:0 22px;border-radius:10px;border:1px solid transparent;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn.ghost{background:transparent;color:var(--fg);border-color:var(--line)}
+.btn.ghost:hover{border-color:var(--accent);color:var(--accent)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-weight:600;font-size:.9rem}
+.field input{width:100%;min-height:48px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:inherit}
+
+/* Intro */
+.hero-title{font-size:clamp(2.1rem,8vw,3.1rem);margin:10px 0 14px}
+.lead{font-size:1.125rem;color:var(--muted);max-width:60ch}
+.eq{display:grid;grid-template-columns:1fr;gap:8px;margin:28px 0 22px;align-items:stretch}
+.eq-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.eq-card.result{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.eq-card.result .eq-sub{color:inherit;opacity:.85}
+.eq-label{font:500 .75rem/1.3 var(--f-mono);letter-spacing:.06em;text-transform:uppercase}
+.eq-card strong{font:700 1.25rem/1.15 var(--f-display)}
+.eq-sub{font-size:.85rem;color:var(--muted)}
+.eq-op{font:600 1.75rem/1 var(--f-display);color:var(--muted);text-align:center}
+.dots{display:grid;grid-template-columns:repeat(4,14px);gap:6px}
+.dots i{width:14px;height:14px;border-radius:50%;border:2px solid var(--muted);display:block}
+.dots i.on{background:var(--accent);border-color:var(--accent)}
+@media (min-width:600px){
+  .eq{grid-template-columns:1fr auto 1fr auto 1fr;gap:12px;align-items:center}
+}
+.start{margin-top:26px;display:flex;flex-direction:column;gap:16px}
+.note{font-size:.85rem;color:var(--muted);margin-top:14px}
+
+/* Quiz */
+.route{padding:0 9px;margin-bottom:14px}
+.track{position:relative;height:6px;border-radius:99px;background:var(--surface-2)}
+.track i{display:block;height:100%;border-radius:99px;background:var(--accent);transition:width .25s ease}
+.pin{position:absolute;top:50%;width:20px;height:20px;border-radius:50%;background:var(--accent);border:4px solid var(--bg);box-shadow:0 0 0 2px var(--accent);transform:translate(-50%,-50%);transition:left .25s ease}
+.qtop{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:22px}
+.phases{display:flex;gap:6px;flex-wrap:wrap}
+.phases span{font:500 .75rem/1 var(--f-mono);padding:6px 10px;border-radius:99px;background:var(--surface-2);color:var(--muted)}
+.phases span.past{background:var(--accent-bg);color:var(--accent)}
+.phases span.now{background:var(--accent);color:var(--accent-ink)}
+.qwrap{animation:rise .18s ease-out}
+@keyframes rise{from{opacity:.5;transform:translateY(6px)}to{opacity:1;transform:none}}
+.qstage{margin-bottom:10px}
+.qtext{font-size:clamp(1.35rem,5vw,1.8rem);margin-bottom:20px}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{width:100%;text-align:left;font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-height:56px;cursor:pointer;display:flex;gap:14px;align-items:flex-start}
+.opt:hover{border-color:var(--accent)}
+.opt .k{flex:none;width:26px;height:26px;border-radius:8px;background:var(--surface-2);font:500 .8rem/26px var(--f-mono);text-align:center;color:var(--muted)}
+.opt[aria-pressed="true"]{background:var(--accent-bg);border-color:var(--accent)}
+.opt[aria-pressed="true"] .k{background:var(--accent);color:var(--accent-ink)}
+.why{margin-top:20px;padding:14px 16px;border-radius:12px;background:var(--surface-2);font-size:.9rem;color:var(--muted)}
+.why b{display:block;font:500 .72rem/1.3 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;color:var(--fg)}
+.qnav{margin-top:20px}
+
+/* Resultado */
+.hero{display:flex;flex-direction:column;gap:18px}
+.profile{font-size:clamp(2rem,8vw,2.9rem)}
+.focus{font-weight:600}
+.mult{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:8px;align-items:stretch}
+.mult .op{align-self:center;font:600 1.4rem/1 var(--f-display);color:var(--muted)}
+.tile{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.tile.res{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.tile .l{font:500 .68rem/1.25 var(--f-mono);letter-spacing:.04em;text-transform:uppercase;min-height:2.5em}
+.tile .n{font:700 clamp(1.5rem,7vw,2.2rem)/1 var(--f-display);font-variant-numeric:tabular-nums}
+.tile .bar{background:var(--surface-2)}
+.tile.res .bar{background:rgba(255,255,255,.3)}
+.tile.res .bar i{background:var(--accent-ink)}
+.bar{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:99px;background:var(--accent)}
+.bar i.good{background:var(--good)}.bar i.warn{background:var(--warn)}.bar i.crit{background:var(--crit)}
+.quad{max-width:420px;width:100%;margin:0 auto}
+.quad svg{width:100%;height:auto;display:block}
+.q{fill:var(--surface-2)}.q.on{fill:var(--accent-bg)}
+.frame{fill:none;stroke:var(--line)}
+.ql{font:500 11px var(--f-mono);fill:var(--muted)}
+.ax{font:500 11px var(--f-body);fill:var(--muted)}
+.tk{font:500 10px var(--f-mono);fill:var(--muted)}
+.dotp{fill:var(--accent);stroke:var(--surface);stroke-width:3}
+.you{font:700 12px var(--f-body);fill:var(--fg)}
+.figcap{font-size:.8rem;color:var(--muted);text-align:center;margin-top:6px}
+
+.chip{display:inline-flex;align-items:center;gap:6px;font:600 .75rem/1 var(--f-body);padding:5px 9px;border-radius:99px;white-space:nowrap}
+.chip::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.chip.good{color:var(--good);background:var(--good-bg)}
+.chip.warn{color:var(--warn);background:var(--warn-bg)}
+.chip.crit{color:var(--crit);background:var(--crit-bg)}
+
+.phase{position:relative;padding-left:26px;padding-bottom:6px}
+.phase+.phase{margin-top:14px}
+.phase::before{content:"";position:absolute;left:6px;top:28px;bottom:6px;width:2px;background:var(--line)}
+.phase h3{font-size:1.05rem;margin-bottom:12px}
+.row{position:relative;display:flex;flex-direction:column;gap:7px;padding-bottom:16px}
+.row:last-child{padding-bottom:6px}
+.node{position:absolute;left:-27px;top:3px;width:14px;height:14px;border-radius:50%;box-shadow:0 0 0 4px var(--surface)}
+.node.good{background:var(--good)}.node.warn{background:var(--warn)}.node.crit{background:var(--crit)}
+.row-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 10px}
+.row-name{font-weight:600}
+.row-right{display:flex;align-items:center;gap:10px}
+.row-pct{font:500 .9rem var(--f-mono);font-variant-numeric:tabular-nums;min-width:3.2ch;text-align:right}
+
+.gap{display:flex;flex-direction:column;gap:10px}
+.gap-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.gap h3{font-size:1.15rem}
+.said{border-left:3px solid var(--line);padding-left:12px;font-size:.9rem;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+.said b{color:var(--fg);font-weight:600}
+.good-list{display:flex;flex-direction:column;gap:8px}
+.good-list li{display:flex;gap:10px;align-items:flex-start}
+.good-list svg{flex:none;margin-top:3px;color:var(--good)}
+
+.plan{display:flex;flex-direction:column;gap:12px}
+.plan-head{display:flex;flex-direction:column;gap:6px}
+.when{align-self:flex-start;font:500 .72rem/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;background:var(--accent-bg);color:var(--accent);padding:6px 10px;border-radius:99px}
+.plan h3{font-size:1.2rem}
+.task{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line);cursor:pointer}
+.task input{flex:none;width:22px;height:22px;margin:1px 0 0;accent-color:var(--accent);cursor:pointer}
+.task span{min-width:0}
+.task input:checked+span{color:var(--muted);text-decoration:line-through}
+.progress{display:flex;flex-direction:column;gap:8px}
+.progress-top{display:flex;justify-content:space-between;gap:10px;font-weight:600}
+.tip{background:var(--accent-bg);border-radius:14px;padding:16px 18px}
+.tip b{display:block;margin-bottom:4px}
+
+.routine{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:640px){.routine{grid-template-columns:repeat(3,1fr)}}
+.routine .card{padding:16px;display:flex;flex-direction:column;gap:10px}
+.routine h3{font-size:1.05rem}
+.routine li{display:flex;gap:10px;font-size:.92rem;align-items:flex-start}
+.routine li::before{content:"";flex:none;width:8px;height:8px;margin-top:.55em;border-radius:2px;background:var(--accent)}
+.routine ul{display:flex;flex-direction:column;gap:8px}
+.qs{display:flex;flex-direction:column;gap:10px}
+.qs li{border-left:3px solid var(--accent);padding:4px 0 4px 14px}
+
+.sim{display:flex;flex-direction:column;gap:14px}
+.sliders{display:flex;flex-direction:column;gap:6px}
+.sliders label{display:flex;justify-content:space-between;font-weight:600;font-size:.92rem;margin-top:8px}
+.sliders output{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.sliders input[type=range]{width:100%;accent-color:var(--accent);min-height:32px}
+.sim-out{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}
+.sim-out strong{font:700 2.4rem/1 var(--f-display);font-variant-numeric:tabular-nums}
+.delta{font-size:.9rem;color:var(--muted)}
+.gdots{display:grid;grid-template-columns:repeat(20,1fr);gap:4px;min-height:20px}
+.gdots i{aspect-ratio:1;border-radius:50%;border:2px solid var(--line);display:block;max-width:100%}
+.gdots i.on{background:var(--accent);border-color:var(--accent)}
+.legend{font-size:.8rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 16px}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;border:2px solid var(--muted);vertical-align:-1px}
+.legend span.on::before{background:var(--accent);border-color:var(--accent)}
+
+.meta{display:flex;flex-direction:column;gap:8px}
+.meta-top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px 10px;font-weight:600}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+.sumbox{width:100%;min-height:180px;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font:.85rem/1.5 var(--f-mono)}
+.fine{font-size:.8rem;color:var(--muted)}
+/* Controle semanal */
+.wk{display:flex;flex-direction:column;gap:4px}
+.wk-row{display:grid;grid-template-columns:minmax(5.5rem,auto) 1fr auto;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.wk-row:first-child{border-top:0}
+.wk-day{font-weight:600}
+.wk-boxes{display:flex;gap:10px;flex-wrap:wrap}
+.wk-boxes input{width:28px;height:28px;margin:0;accent-color:var(--accent);cursor:pointer}
+.wk-n{font:500 .9rem var(--f-mono);font-variant-numeric:tabular-nums;color:var(--muted);min-width:3ch;text-align:right}
+.wk-total{display:flex;flex-direction:column;gap:8px;padding-top:12px;border-top:1px solid var(--line)}
+.wk-total-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 10px;font-weight:600}
+.pdf-box{display:flex;flex-direction:column;gap:10px}
+.pdf-msg{font-size:.9rem;color:var(--fg);background:var(--warn-bg);border-radius:10px;padding:12px 14px}
+.pdf-msg a{color:inherit;font-weight:600}
+.print-only{display:none}
+.lines{display:flex;flex-direction:column;gap:26px;padding-top:10px}
+.lines i{display:block;border-bottom:1px solid var(--line)}
+
+@page{size:A4;margin:14mm}
+@media print{
+  :root,:root:not([data-theme="light"]),:root[data-theme="dark"]{
+    --bg:#fff;--surface:#fff;--surface-2:#ECF0F4;--line:#B8C3CF;--fg:#111;--muted:#444;
+    --accent:#1263C4;--accent-bg:#E1ECFA;--accent-ink:#fff;
+    --good:#157347;--good-bg:#DFF2E7;--warn:#8F5B00;--warn-bg:#FAEDCF;--crit:#B02E1C;--crit-bg:#FADFDA;
+    color-scheme:light;
+  }
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{padding:0;font-size:10.5pt;background:#fff}
+  .wrap{max-width:none}
+  .top,#v-intro,#v-quiz,.screen-only,.actions,#copyMsg,.sumbox,.pdf-msg{display:none!important}
+  .print-only{display:block}
+  .print-head{display:flex!important;justify-content:space-between;gap:16px;border-bottom:2px solid var(--fg);padding-bottom:8px;margin-bottom:14px}
+  .print-head strong{font:700 14pt var(--f-display);display:block}
+  .print-head span{font-size:9.5pt;color:var(--muted)}
+  .card,.gap,.plan,.phase,.row,.wk-row,.tip,.routine>.card{break-inside:avoid}
+  .sec{margin-top:18px}
+  h1,h2,h3,.eyebrow{break-after:avoid}
+  .sec{break-inside:auto}
+  .hero-title,.profile{font-size:22pt}
+  .sec h2{font-size:15pt}
+  .task{cursor:default}
+  .task input,.wk-boxes input{appearance:none;-webkit-appearance:none;width:15px;height:15px;border:1.6px solid var(--fg);border-radius:3px;background:#fff;position:relative}
+  .task input:checked::after,.wk-boxes input:checked::after{content:"";position:absolute;left:3px;top:0;width:4px;height:9px;border:solid var(--fg);border-width:0 2px 2px 0;transform:rotate(45deg)}
+  .wk-boxes input{width:20px;height:20px}
+  .wk-boxes input:checked::after{left:5px;top:1px;width:5px;height:11px}
+  .routine{grid-template-columns:repeat(3,1fr)}
+  .routine li::before{width:12px;height:12px;border:1.6px solid var(--fg);background:transparent;border-radius:3px;margin-top:.2em}
+  .mult{grid-template-columns:1fr auto 1fr auto 1fr}
+  .quad{max-width:300px}
+  a{color:inherit;text-decoration:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6-5.2-6-10a6 6 0 0 1 12 0c0 4.8-6 10-6 10z"/><circle cx="12" cy="11" r="2.2"/></svg>
+    <span class="eyebrow">Região Salvador Norte · Gerente Empresas</span>
+  </div>
+
+  <section id="v-intro">
+    <h1 class="hero-title">Diagnóstico de Visitas</h1>
+    <p class="lead">Quinze perguntas, cerca de cinco minutos. No final você recebe o seu perfil, o que está faltando e um plano de ação para 30 dias.</p>
+
+    <div class="eq" role="group" aria-label="Visitas multiplicadas por visitas efetivas resultam em negócios mapeados">
+      <div class="eq-card">
+        <span class="eq-label">Visitas</span>
+        <div class="dots" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <span class="eq-sub">Quantas você faz</span>
+      </div>
+      <span class="eq-op" aria-hidden="true">×</span>
+      <div class="eq-card">
+        <span class="eq-label">Visitas efetivas</span>
+        <div class="dots" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div>
+        <span class="eq-sub">Em quantas você se aprofunda</span>
+      </div>
+      <span class="eq-op" aria-hidden="true">=</span>
+      <div class="eq-card result">
+        <span class="eq-label">Negócios mapeados</span>
+        <strong>Crédito e transacionalidade</strong>
+        <span class="eq-sub">O resultado da carteira</span>
+      </div>
+    </div>
+
+    <p class="muted">A produtividade vem da multiplicação das duas pontas. Este diagnóstico mede o volume de visitas e a profundidade de cada uma, desde a preparação com o Caderno de Visitas até o registro e a venda na hora. A referência de resultado é a meta mínima de 4 visitas efetivas por dia.</p>
+
+    <div class="card start">
+      <div class="field">
+        <label for="name">Seu nome (opcional)</label>
+        <input id="name" type="text" maxlength="40" autocomplete="name" placeholder="Como devemos chamar você?">
+      </div>
+      <button class="btn primary" id="start" type="button">Começar diagnóstico</button>
+    </div>
+    <p class="note">As respostas não são enviadas a ninguém. O resultado aparece só para você, neste aparelho.</p>
+  </section>
+
+  <section id="v-quiz" hidden>
+    <div class="route" aria-hidden="true">
+      <div class="track"><i id="routeFill"></i><span class="pin" id="routePin"></span></div>
+    </div>
+    <div class="qtop">
+      <span class="eyebrow" id="qCount"></span>
+      <div class="phases" id="phases" aria-hidden="true"></div>
+    </div>
+    <div class="qwrap" id="qwrap">
+      <p class="eyebrow qstage" id="qStage"></p>
+      <h2 class="qtext" id="qText" tabindex="-1"></h2>
+      <div class="opts" id="qOpts"></div>
+      <p class="why" id="qWhy"></p>
+    </div>
+    <div class="qnav"><button class="btn ghost" id="back" type="button">Voltar</button></div>
+  </section>
+
+  <section id="v-result" hidden></section>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+var STAGES = {
+  agenda:{nome:'Agenda e cadência',fase:'Antes',
+    falta:'Sem visitas em volume e com regularidade, não há negócio mapeado. Esse é o gargalo que trava todos os outros: a produtividade só avança quando a agenda de visitas deixa de depender da demanda do dia.',
+    forte:'Sua agenda de visitas tem volume e regularidade. Esse é o ponto de partida e você já o domina.',
+    acoes:['Bloqueie na agenda, por 4 semanas, blocos fixos de visita (por exemplo, manhãs de terça a quinta) e trate como compromisso.','Toda sexta, feche a agenda da semana seguinte com cliente, horário e objetivo de cada visita.','Use como referência a meta mínima de 4 visitas efetivas por dia (20 por semana) e confira na sexta quantas aconteceram.']},
+  caderno:{nome:'Caderno de Visitas',fase:'Antes',
+    falta:'Sem roteiro e sem objetivo definido, a visita fica na superfície: uma conversa agradável que não avança para crédito e transacionalidade. O Caderno de Visitas existe para levar a conversa até a profundidade.',
+    forte:'Você leva roteiro e objetivo para a visita. Isso sustenta a profundidade.',
+    acoes:['Escolha 10 clientes prioritários e abra o Caderno de Visitas de cada um antes da próxima visita.','Antes de sair, escreva em uma linha o objetivo da visita (por exemplo: entender o ciclo do caixa).','Ao final, atualize o caderno com o que descobriu e com a pergunta que ficou pendente para a próxima visita.']},
+  mapa:{nome:'Mapeamento do cliente',fase:'Antes',
+    falta:'Sem olhar a transacionalidade e o endividamento no BACEN, você visita sem saber onde o cliente movimenta o dinheiro e onde paga crédito no mercado. A oportunidade fica escondida.',
+    forte:'Você chega à visita sabendo onde o cliente movimenta e onde deve. Isso abre a conversa de crédito.',
+    acoes:['Antes de cada visita, consulte na ferramenta interna o que o cliente movimenta conosco e no mercado.','Consulte o endividamento no BACEN e anote o que é rotativo, o que é parcelado e com quais instituições.','Leve esse mapa para a visita e comece a conversa pelo que você viu, em vez de perguntar do zero.']},
+  caixa:{nome:'Descasamento de caixa',fase:'Durante',
+    falta:'Sem perguntar sobre prazos de recebimento e de pagamento, a necessidade de limite rotativo não aparece. E quando o cliente diz que não precisa de crédito, a conversa termina cedo demais.',
+    forte:'Você transforma prazo de recebimento e de pagamento em necessidade de limite.',
+    acoes:['Inclua no roteiro duas perguntas fixas: em quantos dias o cliente recebe e em quantos dias paga os fornecedores.','Pergunte em quais meses o caixa aperta e como o cliente cobre esse período hoje.','Diante de “não preciso de crédito”, responda com uma pergunta de aprofundamento antes de encerrar o assunto.']},
+  projetos:{nome:'Projetos e compra de dívida',fase:'Durante',
+    falta:'Sem conversar sobre projetos e sobre o custo das operações que o cliente tem no mercado, você deixa de enxergar crédito parcelado novo e a chance de trazer dívidas para o banco com custo menor.',
+    forte:'Você descobre projetos e operações de mercado que viram crédito e compra de dívida.',
+    acoes:['Pergunte em toda visita: qual investimento o cliente pretende fazer nos próximos 12 meses?','Para clientes com dívida em outras instituições, pergunte custo e prazo da operação e compare com o que o banco pode oferecer.','Registre o projeto, com valor e prazo estimados, no pipeline na mesma semana.']},
+  docs:{nome:'Documentos para crédito',fase:'Durante',
+    falta:'Documentos pedidos só quando o crédito já está em andamento atrasam a operação. Faturamento, fluxo de caixa e IRPF do sócio podem ser pedidos em toda visita e formar a base de crédito aos poucos.',
+    forte:'Sua documentação é construída aos poucos, visita a visita.',
+    acoes:['Coloque a lista de documentos (faturamento, fluxo de caixa e IRPF do sócio) no roteiro de toda visita.','Quando o cliente não tiver fluxo de caixa, monte junto com ele durante a visita e combine a data dos demais documentos.','Faça uma revisão mensal dos clientes prioritários e renove o que estiver vencido.']},
+  fechamento:{nome:'Registro, pipeline e venda',fase:'Depois',
+    falta:'Visita que termina sem registro, sem pipeline e sem proposta de produto não vira resultado e não aparece para a gestão. A visita só é efetiva quando deixa um próximo passo.',
+    forte:'Suas visitas terminam com registro, pipeline e venda. Isso fecha o ciclo.',
+    acoes:['Registre a visita no sistema logo após o encontro, com resumo de três linhas e o próximo passo.','Cadastre no pipeline cada necessidade identificada, com valor estimado e prazo.','Sempre que o cliente aceitar, venda o produto na hora, em vez de deixar para outro contato.']}
+};
+var ORDER = ['agenda','caderno','mapa','caixa','projetos','docs','fechamento'];
+var PHASES = [
+  {titulo:'Antes da visita',stages:['agenda','caderno','mapa']},
+  {titulo:'Durante a visita',stages:['caixa','projetos','docs']},
+  {titulo:'Depois da visita',stages:['fechamento']}
+];
+var TIMING = ['Semanas 1 e 2','Semana 3','Semana 4'];
+
+var QUESTIONS = [
+  {id:'barrier',stage:'inicio',text:'Qual é hoje o maior obstáculo para visitar mais clientes?',
+   why:'Sua resposta personaliza as recomendações do plano de ação. Não entra na pontuação.',
+   opts:[{t:'As demandas internas e o atendimento tomam a minha agenda'},{t:'Não sei exatamente o que perguntar para me aprofundar'},{t:'Deslocamento e logística consomem muito tempo'},{t:'Sinto que não tenho clientes qualificados para visitar'},{t:'Não vejo retorno imediato nas visitas'}]},
+
+  {id:'q1',stage:'agenda',text:'Quantas visitas presenciais a clientes você faz, em média, por semana?',
+   why:'Visita é o ponto de partida. Sem ela, nenhum negócio é mapeado e a produtividade não avança.',
+   opts:[{t:'Menos de 10',s:0,mid:8},{t:'Entre 10 e 15',s:1,mid:13},{t:'Entre 16 e 20',s:2,mid:18},{t:'Acima de 20',s:3,mid:22}]},
+  {id:'q2',stage:'agenda',text:'Como é montada a sua agenda de visitas?',
+   why:'Agenda reativa perde para a rotina interna. Bloco fixo transforma visita em hábito.',
+   opts:[{t:'Visito conforme as demandas aparecem',s:0},{t:'Monto a agenda na semana, mas ela muda quase todo dia',s:1},{t:'Fecho a semana seguinte até sexta, com cliente e objetivo de cada visita',s:2},{t:'Tenho blocos fixos de visita protegidos na agenda, com meta diária e revisão semanal',s:3}]},
+  {id:'q3',stage:'agenda',text:'Quanto da sua semana de trabalho fica fora da agência, em contato direto com clientes?',
+   why:'O tempo fora da agência é o que mais se aproxima da quantidade real de visitas.',
+   opts:[{t:'Menos de 20%',s:0},{t:'Entre 20% e 40%',s:1},{t:'Entre 40% e 60%',s:2},{t:'Mais de 60%',s:3}]},
+
+  {id:'q4',stage:'caderno',text:'Você usa o Caderno de Visitas como roteiro da conversa?',
+   why:'O caderno é o roteiro que leva a conversa da cortesia até a profundidade.',
+   opts:[{t:'Não uso',s:0},{t:'Uso só nas visitas que considero importantes',s:1},{t:'Uso na maioria das visitas',s:2},{t:'Uso em todas e atualizo ao final',s:3}]},
+  {id:'q5',stage:'caderno',text:'O que você prepara antes de sair para a visita?',
+   why:'Visita com objetivo definido rende mais do que visita de relacionamento sem destino.',
+   opts:[{t:'Nada, vou com o que lembro do cliente',s:0},{t:'Dou uma olhada rápida no cadastro',s:1},{t:'Reviso o histórico e o caderno do cliente',s:2},{t:'Defino o objetivo, reviso caderno e dados, e levo as perguntas e a lista de documentos',s:3}]},
+
+  {id:'q6',stage:'mapa',text:'Você consulta, na ferramenta interna, o quanto o cliente transaciona conosco e no mercado?',
+   why:'Quem sabe onde o cliente movimenta o dinheiro sabe onde está a oportunidade de transacionalidade.',
+   opts:[{t:'Não consulto',s:0},{t:'Só quando preciso justificar uma proposta',s:1},{t:'Antes das visitas aos clientes principais',s:2},{t:'Antes de quase toda visita, e uso o dado para escolher a abordagem',s:3}]},
+  {id:'q7',stage:'mapa',text:'Você olha o endividamento do cliente no BACEN, separando o que é rotativo do que é parcelado?',
+   why:'O endividamento mostra onde há crédito no mercado que o banco pode disputar.',
+   opts:[{t:'Não olho',s:0},{t:'Olho só quando vou montar uma proposta de crédito',s:1},{t:'Olho nos clientes-chave',s:2},{t:'Olho antes da visita e levo anotado o que é rotativo, o que é parcelado e com quais instituições',s:3}]},
+
+  {id:'q8',stage:'caixa',text:'Você pergunta ao cliente em quantos dias ele recebe e em quantos dias paga (descasamento de caixa)?',
+   why:'O descasamento de caixa é a porta de entrada para o limite rotativo.',
+   opts:[{t:'Não pergunto',s:0},{t:'Só se o cliente toca no assunto',s:1},{t:'Pergunto na maioria das visitas',s:2},{t:'Pergunto sempre e transformo a resposta em necessidade de limite rotativo',s:3}]},
+  {id:'q9',stage:'caixa',text:'Quando o cliente diz “não preciso de crédito”, o que você faz?',
+   why:'Muitas vezes “não preciso” significa “ainda não percebi”. A pergunta certa mostra a necessidade.',
+   opts:[{t:'Aceito e encerro o assunto',s:0},{t:'Ofereço um produto qualquer para não sair de mãos vazias',s:1},{t:'Faço mais uma pergunta, como a sazonalidade das vendas',s:2},{t:'Investigo ciclo do caixa, sazonalidade, crédito em outros bancos e planos do ano antes de aceitar',s:3}]},
+
+  {id:'q10',stage:'projetos',text:'Você pergunta sobre os projetos futuros do cliente (expansão, equipamentos, frota, reforma, estoque)?',
+   why:'Projeto futuro vira crédito parcelado quando é descoberto cedo.',
+   opts:[{t:'Não pergunto',s:0},{t:'Raramente',s:1},{t:'Na maioria das visitas',s:2},{t:'Sempre, e registro valor e prazo no pipeline',s:3}]},
+  {id:'q11',stage:'projetos',text:'Você identifica operações do cliente no mercado que o banco poderia assumir com custo menor (compra de dívida)?',
+   why:'A compra de dívida traz volume de crédito e aproxima o cliente do banco.',
+   opts:[{t:'Não identifico',s:0},{t:'Só quando o cliente reclama da taxa',s:1},{t:'Às vezes, nos clientes com maior endividamento',s:2},{t:'Sempre: pergunto custo e prazo, comparo e apresento a proposta de redução',s:3}]},
+
+  {id:'q12',stage:'docs',text:'Em quantas visitas você pede ou colhe documentos (faturamento, fluxo de caixa, IRPF do sócio)?',
+   why:'Documento pode ser pedido em toda visita. Quem colhe aos poucos não precisa correr quando o crédito aparece.',
+   opts:[{t:'Só quando já existe um crédito em andamento',s:0},{t:'Em poucas visitas',s:1},{t:'Na maioria',s:2},{t:'Em todas, porque o pedido faz parte do roteiro',s:3}]},
+  {id:'q13',stage:'docs',text:'Como está a documentação dos clientes prioritários da sua carteira?',
+   why:'Documentação pronta reduz o tempo entre identificar a necessidade e liberar o crédito.',
+   opts:[{t:'A maioria está desatualizada ou não existe',s:0},{t:'Metade está em dia',s:1},{t:'A maior parte está em dia',s:2},{t:'Está completa e tenho data para renovar cada documento',s:3}]},
+
+  {id:'q14',stage:'fechamento',text:'Quando você registra a visita no sistema?',
+   why:'Visita não registrada não existe para a gestão nem para o seu próprio acompanhamento.',
+   opts:[{t:'Raramente registro',s:0},{t:'Dias depois, quando lembro',s:1},{t:'No mesmo dia',s:2},{t:'Logo após a visita, com resumo e próximo passo',s:3}]},
+  {id:'q15',stage:'fechamento',text:'O que costuma sair de uma visita sua?',
+   why:'Visita efetiva termina com negócio no pipeline ou produto vendido.',
+   opts:[{t:'Conversa e relacionamento',s:0},{t:'Às vezes um pipeline, cadastrado depois',s:1},{t:'Pipeline cadastrado na maioria das visitas',s:2},{t:'Pipeline cadastrado e, quando cabe, venda de produto na hora',s:3}]}
+];
+
+var PROFILES = {
+  reativo:{nome:'O Reativo',
+    txt:'Poucas visitas e pouca profundidade. A carteira é atendida quando o cliente procura, e o resultado depende da demanda que chega até você. Sem visitas em volume, os negócios não são mapeados e a produtividade fica parada no ponto de partida.',
+    foco:'Comece pela agenda. Antes de aprofundar, é preciso visitar com regularidade.'},
+  especialista:{nome:'O Especialista',
+    txt:'Você sabe aprofundar a visita, mas realiza poucas. Cada visita rende, porém o número é pequeno e muitos negócios ficam sem mapear. O maior ganho está em multiplicar a quantidade de visitas mantendo a profundidade.',
+    foco:'Aumente o volume de visitas sem abrir mão do roteiro que você já domina.'},
+  visitador:{nome:'O Visitador',
+    txt:'Você visita bastante, mas a conversa fica na superfície. O relacionamento existe e falta transformá-lo em crédito e transacionalidade, com roteiro, perguntas certas, documentos e registro.',
+    foco:'Mantenha o ritmo e aprofunde: cada visita precisa terminar com um próximo passo.'},
+  multiplicador:{nome:'O Multiplicador',
+    txt:'Volume e profundidade caminham juntos. O próximo passo é fechar as lacunas que restam e levar a mesma rotina para toda a carteira.',
+    foco:'Refine os pontos mais fracos e transforme sua rotina em padrão para a carteira.'}
+};
+
+var BARRIER_TIPS = [
+  'Proteja blocos fixos de visita na agenda e avise sua equipe e seu gestor. Reserve outros horários para o atendimento interno e trate a visita como a atividade que gera negócio.',
+  'Leve o roteiro de perguntas (veja mais abaixo) impresso ou dentro do Caderno de Visitas. Comece usando duas perguntas por visita e acrescente uma a cada semana.',
+  'Agrupe as visitas por proximidade e por dia da semana. Duas ou três visitas na mesma região, no mesmo bloco, rendem mais do que visitas espalhadas.',
+  'Use a ferramenta interna para listar os clientes com maior movimentação no mercado e maior endividamento no BACEN. São os que mais têm a ganhar com uma conversa de crédito.',
+  'O retorno vem da multiplicação entre visitas e visitas efetivas. Acompanhe por 30 dias quantos pipelines nasceram das suas visitas e use esse número como referência.'
+];
+
+var ROUTINE = [
+  {t:'Antes',i:['Abrir o Caderno de Visitas e definir o objetivo da visita','Consultar a transacionalidade, conosco e no mercado, na ferramenta interna','Consultar o endividamento no BACEN: rotativo e parcelado']},
+  {t:'Durante',i:['Perguntar sobre prazo de recebimento e de pagamento','Perguntar sobre os projetos dos próximos 12 meses','Perguntar sobre custo e prazo das operações em outros bancos','Pedir faturamento, fluxo de caixa e IRPF do sócio','Vender o produto na hora, quando o cliente aceitar']},
+  {t:'Depois',i:['Registrar a visita com resumo e próximo passo','Cadastrar o pipeline','Atualizar o Caderno de Visitas e agendar a próxima visita']}
+];
+var QS = [
+  'Em quantos dias o senhor recebe das vendas e em quantos dias paga os fornecedores?',
+  'Em que meses o caixa fica mais apertado e como a empresa cobre esse período hoje?',
+  'Que investimento a empresa pretende fazer nos próximos 12 meses?',
+  'Por qual banco passam hoje os recebimentos da empresa?',
+  'O que a empresa paga hoje nas operações com outras instituições? Posso comparar com o que podemos oferecer.'
+];
+
+var KEY = 'dvsn-salvador-norte-pdf-v1';
+var PAGES_URL = 'https://jorgehgdias.github.io/diagnostico-visitas-salvador-norte/';
+var DIAS = ['Segunda','Terça','Quarta','Quinta','Sexta'];
+var META_DIA = 4;
+var state = {name:'',answers:{},checks:{},step:0};
+var sim = {v:0,p:0,v0:0,p0:0};
+var locked = false;
+
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify({name:state.name,answers:state.answers,checks:state.checks}));}catch(e){}}
+function restore(){
+  try{
+    var r=localStorage.getItem(KEY);
+    if(!r)return;
+    var d=JSON.parse(r)||{};
+    state.name=typeof d.name==='string'?d.name.slice(0,40):'';
+    state.checks=d.checks&&typeof d.checks==='object'?d.checks:{};
+    var a=d.answers||{};
+    QUESTIONS.forEach(function(q){
+      var v=a[q.id];
+      if(typeof v==='number'&&v>=0&&v<q.opts.length)state.answers[q.id]=v;
+    });
+  }catch(e){}
+}
+function answeredCount(){return QUESTIONS.filter(function(q){return state.answers[q.id]!==undefined;}).length;}
+function firstUnanswered(){
+  for(var i=0;i<QUESTIONS.length;i++){if(state.answers[QUESTIONS[i].id]===undefined)return i;}
+  return 0;
+}
+
+function show(view){
+  ['intro','quiz','result'].forEach(function(v){$('v-'+v).hidden=(v!==view);});
+  window.scrollTo(0,0);
+}
+
+/* ---------- Quiz ---------- */
+function renderQuestion(){
+  var q=QUESTIONS[state.step];
+  var total=QUESTIONS.length;
+  var fase=q.stage==='inicio'?'Início':STAGES[q.stage].fase;
+  var nome=q.stage==='inicio'?'Seu ponto de partida':STAGES[q.stage].nome;
+  var frac=state.step/total;
+  $('routeFill').style.width=(frac*100)+'%';
+  $('routePin').style.left=(frac*100)+'%';
+  $('qCount').textContent='Pergunta '+(state.step+1)+' de '+total;
+  var names=['Início','Antes','Durante','Depois'];
+  var cur=names.indexOf(fase);
+  $('phases').innerHTML=names.map(function(n,i){
+    return '<span class="'+(i<cur?'past':i===cur?'now':'')+'">'+n+'</span>';
+  }).join('');
+  $('qStage').textContent=fase+' · '+nome;
+  $('qText').textContent=q.text;
+  var sel=state.answers[q.id];
+  $('qOpts').innerHTML=q.opts.map(function(o,i){
+    return '<button type="button" class="opt" data-i="'+i+'" aria-pressed="'+(sel===i)+'"><span class="k" aria-hidden="true">'+String.fromCharCode(65+i)+'</span><span>'+esc(o.t)+'</span></button>';
+  }).join('');
+  $('qWhy').innerHTML='<b>Por que perguntamos</b>'+esc(q.why);
+  var w=$('qwrap');
+  w.style.animation='none';void w.offsetWidth;w.style.animation='';
+  try{$('qText').focus({preventScroll:true});}catch(e){}
+  locked=false;
+}
+
+function onPick(e){
+  var b=e.target.closest('.opt');
+  if(!b||locked)return;
+  locked=true;
+  var q=QUESTIONS[state.step];
+  state.answers[q.id]=parseInt(b.getAttribute('data-i'),10);
+  persist();
+  Array.prototype.forEach.call($('qOpts').children,function(c){c.setAttribute('aria-pressed',String(c===b));});
+  setTimeout(function(){
+    if(state.step<QUESTIONS.length-1){state.step++;renderQuestion();window.scrollTo(0,0);}
+    else{show('result');renderResult();}
+  },240);
+}
+
+/* ---------- Cálculo ---------- */
+function stagePct(id){
+  var sum=0,max=0;
+  QUESTIONS.forEach(function(q){
+    if(q.stage!==id)return;
+    var a=state.answers[q.id];
+    if(a!==undefined)sum+=q.opts[a].s;
+    max+=3;
+  });
+  return max?Math.round(sum/max*100):0;
+}
+function status(p){
+  if(p<40)return {k:'crit',t:'Prioridade alta'};
+  if(p<70)return {k:'warn',t:'Em construção'};
+  return {k:'good',t:'Ponto forte'};
+}
+function compute(){
+  var pcts={};
+  ORDER.forEach(function(id){pcts[id]=stagePct(id);});
+  var vol=pcts.agenda;
+  var others=ORDER.filter(function(id){return id!=='agenda';});
+  var depth=Math.round(others.reduce(function(a,id){return a+pcts[id];},0)/others.length);
+  var idx=Math.round(vol*depth/100);
+  var hv=vol>=60,hd=depth>=60;
+  var profile=hv&&hd?'multiplicador':hv?'visitador':hd?'especialista':'reativo';
+  var cand=ORDER.filter(function(id){return pcts[id]<85;}).sort(function(a,b){return pcts[a]-pcts[b];});
+  if(pcts.agenda<60){cand=['agenda'].concat(cand.filter(function(i){return i!=='agenda';}));}
+  return {pcts:pcts,vol:vol,depth:depth,idx:idx,profile:profile,priorities:cand.slice(0,3)};
+}
+
+/* ---------- Quadro ---------- */
+function quad(vol,depth,pk){
+  var x0=46,y0=12,w=278,h=206,t=0.6;
+  var xs=x0+t*w,ys=y0+(1-t)*h;
+  var px=x0+vol/100*w,py=y0+(1-depth/100)*h;
+  function on(k){return pk===k?' on':'';}
+  function f(n){return Math.round(n*10)/10;}
+  var ly=depth>85?py+24:py-14;
+  return '<svg viewBox="0 0 340 262" role="img" aria-label="Posição no quadro: '+vol+'% de volume e cadência e '+depth+'% de profundidade">'
+   +'<rect class="q'+on('especialista')+'" x="'+x0+'" y="'+y0+'" width="'+f(xs-x0)+'" height="'+f(ys-y0)+'"/>'
+   +'<rect class="q'+on('multiplicador')+'" x="'+f(xs)+'" y="'+y0+'" width="'+f(x0+w-xs)+'" height="'+f(ys-y0)+'"/>'
+   +'<rect class="q'+on('reativo')+'" x="'+x0+'" y="'+f(ys)+'" width="'+f(xs-x0)+'" height="'+f(y0+h-ys)+'"/>'
+   +'<rect class="q'+on('visitador')+'" x="'+f(xs)+'" y="'+f(ys)+'" width="'+f(x0+w-xs)+'" height="'+f(y0+h-ys)+'"/>'
+   +'<rect class="frame" x="'+x0+'" y="'+y0+'" width="'+w+'" height="'+h+'"/>'
+   +'<text class="ql" x="'+(x0+8)+'" y="'+(y0+16)+'">Especialista</text>'
+   +'<text class="ql" text-anchor="end" x="'+(x0+w-8)+'" y="'+(y0+16)+'">Multiplicador</text>'
+   +'<text class="ql" x="'+(x0+8)+'" y="'+(y0+h-8)+'">Reativo</text>'
+   +'<text class="ql" text-anchor="end" x="'+(x0+w-8)+'" y="'+(y0+h-8)+'">Visitador</text>'
+   +'<text class="tk" x="'+x0+'" y="'+(y0+h+14)+'" text-anchor="middle">0</text>'
+   +'<text class="tk" x="'+f(xs)+'" y="'+(y0+h+14)+'" text-anchor="middle">60%</text>'
+   +'<text class="tk" x="'+(x0+w)+'" y="'+(y0+h+14)+'" text-anchor="middle">100%</text>'
+   +'<text class="tk" x="'+(x0-6)+'" y="'+(y0+h+3)+'" text-anchor="end">0</text>'
+   +'<text class="tk" x="'+(x0-6)+'" y="'+f(ys+3)+'" text-anchor="end">60%</text>'
+   +'<text class="tk" x="'+(x0-6)+'" y="'+(y0+4)+'" text-anchor="end">100%</text>'
+   +'<text class="ax" x="'+(x0+w/2)+'" y="'+(y0+h+36)+'" text-anchor="middle">Volume e cadência de visitas</text>'
+   +'<text class="ax" x="10" y="'+(y0+h/2)+'" text-anchor="middle" transform="rotate(-90 10 '+(y0+h/2)+')">Profundidade</text>'
+   +'<circle class="dotp" cx="'+f(px)+'" cy="'+f(py)+'" r="9"/>'
+   +'<text class="you" x="'+f(Math.min(Math.max(px,x0+14),x0+w-14))+'" y="'+f(ly)+'" text-anchor="middle">Você</text>'
+   +'</svg>';
+}
+
+/* ---------- Resultado ---------- */
+function checkIcon(){return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';}
+
+function renderResult(){
+  var c=compute();
+  var P=PROFILES[c.profile];
+  var h='';
+  var who=state.name?esc(state.name):'';
+  var hoje=new Date().toLocaleDateString('pt-BR');
+
+  h+='<div class="print-only print-head"><div><strong>Diagnóstico de Visitas</strong><span>Gerente Empresas · Região Salvador Norte</span></div>'
+   +'<div style="text-align:right"><span>Nome: <b>'+(who||'______________________')+'</b></span><br><span>Data: <b>'+hoje+'</b></span></div></div>';
+
+  h+='<section class="card hero">'
+   +'<p class="eyebrow">'+(who?'Resultado de '+who:'Seu perfil')+'</p>'
+   +'<h1 class="profile">'+P.nome+'</h1>'
+   +'<p>'+P.txt+'</p>'
+   +'<p class="focus">'+P.foco+'</p>'
+   +'<div class="mult" role="group" aria-label="Volume '+c.vol+'% vezes profundidade '+c.depth+'% igual a aproveitamento '+c.idx+'%">'
+   +tile('Volume e cadência',c.vol,'')+'<span class="op" aria-hidden="true">×</span>'
+   +tile('Profundidade',c.depth,'')+'<span class="op" aria-hidden="true">=</span>'
+   +tile('Aproveitamento',c.idx,' res')
+   +'</div>'
+   +'<figure class="quad">'+quad(c.vol,c.depth,c.profile)+'<figcaption class="figcap">O quadro usa 60% como linha de corte para volume e para profundidade.</figcaption></figure>'
+   +'</section>';
+
+  h+='<section class="sec"><p class="eyebrow">Mapa da visita</p><h2>Onde a visita ganha ou perde força</h2>'
+   +'<div class="card">'+PHASES.map(function(ph){
+      return '<div class="phase"><h3>'+ph.titulo+'</h3>'+ph.stages.map(function(id){
+        var p=c.pcts[id],s=status(p);
+        return '<div class="row"><span class="node '+s.k+'"></span>'
+         +'<div class="row-head"><span class="row-name">'+STAGES[id].nome+'</span><span class="row-right"><span class="chip '+s.k+'">'+s.t+'</span><span class="row-pct">'+p+'%</span></span></div>'
+         +'<div class="bar"><i class="'+s.k+'" style="width:'+p+'%"></i></div></div>';
+      }).join('')+'</div>';
+    }).join('')+'</div></section>';
+
+  var gaps=ORDER.filter(function(id){return c.pcts[id]<70;}).sort(function(a,b){return c.pcts[a]-c.pcts[b];});
+  var strong=ORDER.filter(function(id){return c.pcts[id]>=70;});
+  h+='<section class="sec"><p class="eyebrow">Diagnóstico</p><h2>O que está faltando</h2>';
+  if(!gaps.length){
+    h+='<div class="card"><p>Nenhuma etapa ficou abaixo de 70%. Sua rotina de visitas está consolidada. O foco agora é manter o padrão e acompanhar quantos pipelines nascem de cada visita.</p></div>';
+  }else{
+    h+=gaps.map(function(id){
+      var s=status(c.pcts[id]);
+      var said=[];
+      QUESTIONS.forEach(function(q){
+        if(q.stage===id&&state.answers[q.id]!==undefined&&q.opts[state.answers[q.id]].s<=1){said.push(q.opts[state.answers[q.id]].t);}
+      });
+      said=said.slice(0,2);
+      return '<article class="card gap"><div class="gap-head"><h3>'+STAGES[id].nome+'</h3><span class="chip '+s.k+'">'+s.t+' · '+c.pcts[id]+'%</span></div>'
+       +'<p>'+STAGES[id].falta+'</p>'
+       +(said.length?'<div class="said"><b>O que você respondeu</b>'+said.map(function(t){return '<span>'+esc(t)+'</span>';}).join('')+'</div>':'')
+       +'</article>';
+    }).join('');
+  }
+  if(strong.length){
+    h+='<div class="card"><h3 style="font-size:1.05rem;margin-bottom:12px">Pontos fortes</h3><ul class="good-list">'
+     +strong.map(function(id){return '<li>'+checkIcon()+'<span>'+STAGES[id].forte+'</span></li>';}).join('')+'</ul></div>';
+  }
+  h+='</section>';
+
+  var total=c.priorities.length*3;
+  h+='<section class="sec"><p class="eyebrow">Plano de ação</p><h2>Seus próximos 30 dias</h2>';
+  if(!c.priorities.length){
+    h+='<div class="card"><p>Todas as etapas estão acima de 85%. Mantenha a rotina abaixo, compartilhe seu roteiro com colegas e acompanhe o número de pipelines por visita.</p></div>';
+  }else{
+    h+='<div class="card progress"><div class="progress-top"><span>Ações concluídas</span><span id="planCount"></span></div><div class="bar"><i id="planBar" style="width:0%"></i></div></div>';
+    h+=c.priorities.map(function(id,n){
+      return '<article class="card plan"><div class="plan-head"><span class="when">'+TIMING[n]+'</span><h3>'+STAGES[id].nome+'</h3></div>'
+       +STAGES[id].acoes.map(function(a,i){
+          var cid=id+'-'+i;
+          return '<label class="task"><input type="checkbox" data-check="'+cid+'" id="chk-'+cid+'"'+(state.checks[cid]?' checked':'')+'><span>'+a+'</span></label>';
+        }).join('')
+       +'</article>';
+    }).join('');
+  }
+  var bi=state.answers.barrier;
+  if(bi!==undefined){
+    h+='<div class="tip"><b>Sobre o seu maior obstáculo</b>'+BARRIER_TIPS[bi]+'</div>';
+  }
+  h+='</section>';
+
+  h+='<section class="sec"><p class="eyebrow">Controle semanal</p><h2>Meta: 4 visitas efetivas por dia</h2>'
+   +'<div class="card wk"><p class="muted" style="margin-bottom:8px">Marque cada visita efetiva ao final do dia: a que teve roteiro, aprofundamento, registro e próximo passo.</p>'
+   +DIAS.map(function(d,di){
+      var bx='';
+      for(var i=0;i<META_DIA;i++){var k='wk-'+di+'-'+i;bx+='<input type="checkbox" id="chk-'+k+'" data-check="'+k+'" aria-label="'+d+', visita efetiva '+(i+1)+'"'+(state.checks[k]?' checked':'')+'>';}
+      return '<div class="wk-row"><span class="wk-day">'+d+'</span><span class="wk-boxes">'+bx+'</span><span class="wk-n" id="wkn-'+di+'"></span></div>';
+    }).join('')
+   +'<div class="wk-total"><div class="wk-total-top"><span id="wkTxt"></span><span class="chip" id="wkChip"></span></div><div class="bar"><i id="wkBar" style="width:0%"></i></div>'
+   +'<div class="screen-only"><button class="btn ghost" type="button" id="wkReset">Zerar semana</button></div></div></div></section>';
+
+  h+='<section class="sec"><p class="eyebrow">Rotina</p><h2>O roteiro de toda visita</h2>'
+   +'<div class="routine">'+ROUTINE.map(function(r){
+      return '<div class="card"><h3>'+r.t+'</h3><ul>'+r.i.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul></div>';
+    }).join('')+'</div>'
+   +'<div class="card"><h3 style="font-size:1.05rem;margin-bottom:12px">Perguntas para levar ao Caderno de Visitas</h3><ul class="qs">'
+   +QS.map(function(x){return '<li>“'+x+'”</li>';}).join('')+'</ul></div></section>';
+
+  var q1=QUESTIONS[1];
+  sim.v0=q1.opts[state.answers.q1].mid;
+  sim.p0=Math.min(100,Math.max(0,Math.round(c.depth/5)*5));
+  sim.v=sim.v0;sim.p=sim.p0;
+  h+='<section class="sec screen-only"><p class="eyebrow">Simulador</p><h2>A multiplicação na prática</h2>'
+   +'<div class="card sim"><p class="muted">O ponto de partida é uma estimativa feita a partir das suas respostas. Ajuste para os seus números reais e veja como volume e profundidade se multiplicam.</p>'
+   +'<div class="sliders"><label for="simV"><span>Visitas por semana</span><output id="simVo" for="simV"></output></label>'
+   +'<input type="range" id="simV" min="0" max="30" step="1" value="'+sim.v+'">'
+   +'<label for="simP"><span>Visitas efetivas</span><output id="simPo" for="simP"></output></label>'
+   +'<input type="range" id="simP" min="0" max="100" step="5" value="'+sim.p+'"></div>'
+   +'<div class="sim-out"><strong id="simEf">0</strong><span>visitas efetivas por mês</span><span class="delta" id="simDelta"></span></div>'
+   +'<div class="meta"><div class="meta-top"><span id="metaTxt"></span><span class="chip" id="metaChip"></span></div><div class="bar"><i id="metaBar" style="width:0%"></i></div><p class="fine">Meta mínima: 4 visitas efetivas por dia, ou 20 por semana e 80 por mês (5 dias úteis por semana, 4 semanas por mês).</p></div>'
+   +'<div class="gdots" id="simDots" aria-hidden="true"></div>'
+   +'<div class="legend"><span class="on">Efetiva</span><span>Superficial</span><span>Considera 4 semanas por mês</span></div>'
+   +'<div><button class="btn ghost" type="button" id="simReset">Voltar à estimativa</button></div></div></section>';
+
+  h+='<section class="sec"><p class="eyebrow print-only" style="margin-bottom:-4px">Anotações</p><div class="print-only lines" aria-hidden="true"><i></i><i></i><i></i><i></i></div></section>';
+
+  h+='<section class="sec screen-only"><p class="eyebrow">Exportar</p><h2>Leve o plano impresso</h2>'
+   +'<div class="card pdf-box"><p>O PDF traz seu perfil, o diagnóstico, o plano de 30 dias, o controle semanal e o roteiro da visita, com caixas para marcar à mão. As caixas que você já marcou aqui saem marcadas.</p>'
+   +'<div class="actions" style="margin-top:0"><button class="btn primary" type="button" id="pdf">Exportar PDF</button></div>'
+   +'<p class="fine">Na janela de impressão, escolha “Salvar como PDF” como destino e, se preferir, desmarque cabeçalhos e rodapés.</p>'
+   +'<p class="pdf-msg" id="pdfMsg" role="status" hidden></p></div></section>';
+
+  h+='<section class="sec"><div class="actions"><button class="btn ghost" type="button" id="copy">Copiar resumo</button><button class="btn ghost" type="button" id="redo">Refazer diagnóstico</button></div>'
+   +'<p class="fine" id="copyMsg" role="status"></p>'
+   +'<textarea class="sumbox" id="sumbox" readonly hidden aria-label="Resumo do diagnóstico"></textarea>'
+   +'<p class="fine">O índice de aproveitamento é uma referência criada para este diagnóstico: volume multiplicado por profundidade. A meta mínima de referência é de 4 visitas efetivas por dia.</p></section>';
+
+  $('v-result').innerHTML=h;
+  updateSim();
+  updatePlan();
+  updateWeek();
+}
+
+function updateWeek(){
+  if(!$('wkTxt'))return;
+  var tot=0;
+  DIAS.forEach(function(d,di){
+    var n=0;
+    for(var i=0;i<META_DIA;i++){if(state.checks['wk-'+di+'-'+i])n++;}
+    tot+=n;
+    $('wkn-'+di).textContent=n+'/'+META_DIA;
+  });
+  var meta=DIAS.length*META_DIA;
+  var r=tot/meta;
+  var s=r>=1?{k:'good',t:'Meta da semana atingida'}:r>=0.5?{k:'warn',t:'Em andamento'}:{k:'crit',t:'Longe da meta'};
+  $('wkTxt').textContent=tot+' de '+meta+' visitas efetivas na semana';
+  $('wkChip').className='chip '+s.k;
+  $('wkChip').textContent=s.t;
+  $('wkBar').className=s.k;
+  $('wkBar').style.width=Math.min(100,r*100)+'%';
+}
+
+function doPrint(){
+  var msg=$('pdfMsg');
+  var framed=false;
+  try{framed=window.self!==window.top;}catch(e){framed=true;}
+  try{window.print();}catch(e){}
+  if(framed){
+    msg.innerHTML='Esta visualização não abre a janela de impressão. Para gerar o PDF, abra a <a href="'+PAGES_URL+'" target="_blank" rel="noopener">versão independente</a> e responda por lá. As respostas não passam de uma versão para outra. Aqui, use “Copiar resumo” para guardar o texto.';
+    msg.hidden=false;
+  }
+}
+
+function tile(label,n,cls){
+  return '<div class="tile'+cls+'"><span class="l">'+label+'</span><span class="n">'+n+'%</span><div class="bar"><i style="width:'+n+'%"></i></div></div>';
+}
+
+function updatePlan(){
+  var el=$('planCount');
+  if(!el)return;
+  var c=compute();
+  var total=c.priorities.length*3,done=0;
+  c.priorities.forEach(function(id){for(var i=0;i<3;i++){if(state.checks[id+'-'+i])done++;}});
+  el.textContent=done+' de '+total;
+  $('planBar').style.width=(total?done/total*100:0)+'%';
+}
+
+function updateSim(){
+  var vEl=$('simV');
+  if(!vEl)return;
+  sim.v=parseInt(vEl.value,10);
+  sim.p=parseInt($('simP').value,10);
+  $('simVo').textContent=sim.v;
+  $('simPo').textContent=sim.p+'%';
+  var vm=sim.v*4;
+  var ef=Math.round(vm*sim.p/100);
+  var base=Math.round(sim.v0*4*sim.p0/100);
+  $('simEf').textContent=ef;
+  var d=ef-base;
+  $('simDelta').textContent=d===0?'Igual à estimativa de partida ('+base+')':(d>0?'+':'−')+Math.abs(d)+' em relação à estimativa de partida ('+base+')';
+  var META=80;
+  var ratio=ef/META;
+  var ms=ratio>=1?{k:'good',t:'Meta atingida'}:ratio>=0.5?{k:'warn',t:'Abaixo da meta'}:{k:'crit',t:'Longe da meta'};
+  $('metaTxt').textContent=ef+' de '+META+' visitas efetivas no mês · '+(ef/20).toFixed(1).replace('.',',')+' por dia';
+  $('metaChip').className='chip '+ms.k;
+  $('metaChip').textContent=ms.t;
+  $('metaBar').className=ms.k;
+  $('metaBar').style.width=Math.min(100,ratio*100)+'%';
+  var dots='';
+  for(var i=0;i<vm;i++){dots+='<i'+(i<ef?' class="on"':'')+'></i>';}
+  $('simDots').innerHTML=dots;
+}
+
+function summaryText(){
+  var c=compute();
+  var P=PROFILES[c.profile];
+  var L=[];
+  L.push('Diagnóstico de Visitas · Gerente Empresas · Região Salvador Norte');
+  if(state.name)L.push('Nome: '+state.name);
+  L.push('Perfil: '+P.nome);
+  L.push('Volume e cadência: '+c.vol+'% | Profundidade: '+c.depth+'% | Aproveitamento: '+c.idx+'%');
+  L.push('');
+  L.push('Resultado por etapa:');
+  ORDER.forEach(function(id){L.push('- '+STAGES[id].nome+': '+c.pcts[id]+'% ('+status(c.pcts[id]).t+')');});
+  L.push('');
+  L.push('Plano de 30 dias:');
+  c.priorities.forEach(function(id,n){
+    L.push((n+1)+'. '+TIMING[n]+' · '+STAGES[id].nome);
+    STAGES[id].acoes.forEach(function(a,i){L.push('   ['+(state.checks[id+'-'+i]?'x':' ')+'] '+a);});
+  });
+  return L.join('\n');
+}
+
+function doCopy(){
+  var text=summaryText();
+  var msg=$('copyMsg'),box=$('sumbox');
+  function fallback(){
+    box.value=text;box.hidden=false;box.focus();box.select();
+    msg.textContent='Não foi possível copiar automaticamente. Selecione o texto abaixo e copie.';
+  }
+  try{
+    if(!navigator.clipboard||!navigator.clipboard.writeText){fallback();return;}
+    navigator.clipboard.writeText(text).then(function(){box.hidden=true;msg.textContent='Resumo copiado.';},fallback);
+  }catch(e){fallback();}
+}
+
+var redoTimer=null;
+function doRedo(btn){
+  if(!btn.getAttribute('data-arm')){
+    btn.setAttribute('data-arm','1');
+    btn.textContent='Confirmar: apagar respostas e plano?';
+    redoTimer=setTimeout(function(){btn.removeAttribute('data-arm');btn.textContent='Refazer diagnóstico';},4000);
+    return;
+  }
+  clearTimeout(redoTimer);
+  state.answers={};state.checks={};state.step=0;
+  persist();
+  $('start').textContent='Começar diagnóstico';
+  show('intro');
+}
+
+/* ---------- Eventos ---------- */
+$('start').addEventListener('click',function(){
+  state.name=$('name').value.trim().slice(0,40);
+  state.step=firstUnanswered();
+  persist();
+  show('quiz');
+  renderQuestion();
+});
+$('back').addEventListener('click',function(){
+  if(state.step>0){state.step--;renderQuestion();window.scrollTo(0,0);}
+  else{show('intro');}
+});
+$('qOpts').addEventListener('click',onPick);
+$('v-result').addEventListener('change',function(e){
+  var t=e.target;
+  if(t&&t.getAttribute&&t.getAttribute('data-check')){
+    state.checks[t.getAttribute('data-check')]=t.checked;
+    persist();updatePlan();updateWeek();
+  }
+});
+$('v-result').addEventListener('input',function(e){
+  if(e.target&&(e.target.id==='simV'||e.target.id==='simP'))updateSim();
+});
+$('v-result').addEventListener('click',function(e){
+  var b=e.target.closest('button');
+  if(!b)return;
+  if(b.id==='pdf')doPrint();
+  else if(b.id==='wkReset'){
+    Object.keys(state.checks).forEach(function(k){if(k.indexOf('wk-')===0)delete state.checks[k];});
+    persist();
+    Array.prototype.forEach.call(document.querySelectorAll('.wk-boxes input'),function(i){i.checked=false;});
+    updateWeek();
+  }
+  else if(b.id==='copy')doCopy();
+  else if(b.id==='redo')doRedo(b);
+  else if(b.id==='simReset'){$('simV').value=sim.v0;$('simP').value=sim.p0;updateSim();}
+});
+
+/* ---------- Início ---------- */
+restore();
+$('name').value=state.name;
+var n=answeredCount();
+if(n===QUESTIONS.length){show('result');renderResult();}
+else{
+  if(n>0)$('start').textContent='Continuar de onde parou';
+  show('intro');
+}
+})();
+</script>
+</body>
+</html>
